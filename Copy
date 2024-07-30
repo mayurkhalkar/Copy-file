@@ -1,0 +1,49 @@
+import logging
+from google.cloud import storage
+import os
+
+def setup_logging():
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("file_transfer.log"),
+            logging.StreamHandler()
+        ]
+    )
+
+def download_from_gcs(bucket_name, source_blob_name, destination_file_path):
+    try:
+        # Initialize a storage client
+        storage_client = storage.Client()
+        logging.info(f'Initialized storage client.')
+
+        # Get the bucket
+        bucket = storage_client.bucket(bucket_name)
+        logging.info(f'Accessing bucket: {bucket_name}')
+
+        # Get the blob (file) from the bucket
+        blob = bucket.blob(source_blob_name)
+        logging.info(f'Preparing to download blob: {source_blob_name}')
+
+        # Download the file to a local destination
+        blob.download_to_filename(destination_file_path)
+        logging.info(f'File {source_blob_name} downloaded to {destination_file_path}.')
+    except Exception as e:
+        logging.error(f'Error downloading file: {str(e)}')
+
+if __name__ == "__main__":
+    setup_logging()
+    
+    # Replace with your bucket name, file in GCS, and NAS path
+    bucket_name = "your-bucket-name"
+    source_blob_name = "path/in/gcs/file.txt"
+    nas_path = "/path/to/nas/directory/file.txt"
+    
+    # Ensure NAS directory exists
+    os.makedirs(os.path.dirname(nas_path), exist_ok=True)
+    logging.info(f'Ensured NAS directory exists at {os.path.dirname(nas_path)}')
+    
+    # Download from GCS and save to NAS
+    download_from_gcs(bucket_name, source_blob_name, nas_path)
